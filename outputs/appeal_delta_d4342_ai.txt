@@ -1,0 +1,17 @@
+Appeal Packet
+============
+
+Patient: John Smith
+Payer: Delta Dental PPO
+Provider: Dr. Sarah Johnson DDS
+Date of Service: 03/15/2025
+Claim ID: CLM-2025-0315-001
+Procedure Code: D4342
+Denial Code: CO-50
+Denial Reason: CO-50 - Not medically necessary
+Amount Billed: $280.00
+Amount Denied: $280.00
+
+Narrative
+---------
+I am writing to appeal the denial of procedure code D4342, which was denied as not medically necessary with a denial code of CO-50 by Delta Dental PPO. According to the clinical criteria, periodontal treatment is considered medically necessary when pocket depths of 4mm or greater are present on at least 2 teeth per quadrant, bleeding on probing is documented, and radiographic evidence of bone loss is shown. The attached perio chart and BOP charting demonstrate that these criteria are met, with pocket depths exceeding 4mm and bleeding on probing present. Additionally, the radiographs provide evidence of bone loss. These documents support the medical necessity of the treatment provided. I request that you reconsider the denial and approve the claim based on the clinical criteria and the attached documentation.

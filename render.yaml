@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: usdent-api
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: |
+      apt-get update && apt-get install -y tesseract-ocr poppler-utils
+      pip install -r requirements.txt
+    startCommand: "PYTHONPATH=src USDENT_TESSERACT_CMD=/usr/bin/tesseract uvicorn usdent.api:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: USDENT_UI_ORIGINS
+        value: https://REPLACE_WITH_VERCEL_URL
+      - key: USDENT_TESSERACT_CMD
+        value: /usr/bin/tesseract
+      - key: USDENT_PDF_OCR
+        value: auto
+      - key: USDENT_PDF_DPI
+        value: "300"
+      - key: USDENT_AI_MODEL
+        value: llama-3.3-70b-versatile
+      - key: USDENT_AI_ENDPOINT
+        value: https://api.groq.com/openai/v1/chat/completions
+      - key: LLAMA_API_KEY
+        sync: false

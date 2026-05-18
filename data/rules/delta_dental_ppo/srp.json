@@ -1,0 +1,54 @@
+{
+  "version": "2026-05-14",
+  "payer": "MULTI",
+  "rules": [
+    {
+      "id": "DELTA-D4342-MEDNEC",
+      "payer": "Delta Dental",
+      "procedure_codes": ["D4342"],
+      "denial_codes": ["CO-50"],
+      "required_evidence_types": [
+        "PerioChart",
+        "BleedingOnProbing",
+        "Radiographs"
+      ],
+      "narrative_template": "For D4342, clinical documentation shows pocket depths of 4mm or greater on at least 2 teeth per quadrant, bleeding on probing, and radiographic evidence of bone loss. These findings support medical necessity for SRP."
+    },
+    {
+      "id": "DELTA-D2950-LACKDOC",
+      "payer": "Delta Dental",
+      "procedure_codes": ["D2950"],
+      "denial_codes": ["CO-16"],
+      "required_evidence_types": [
+        "CoronalStructureEstimate",
+        "DecayRemovalDocumentation",
+        "CrownPlanned"
+      ],
+      "narrative_template": "For D2950, the tooth has less than 50% remaining coronal structure after decay removal, and a crown is planned. The core buildup restores structural integrity and provides retention for the definitive crown."
+    },
+    {
+      "id": "METLIFE-D4342-MEDNEC",
+      "payer": "MetLife",
+      "procedure_codes": ["D4342"],
+      "denial_codes": ["CO-50"],
+      "required_evidence_types": [
+        "PerioChart",
+        "BleedingOnProbing",
+        "Radiographs"
+      ],
+      "narrative_template": "For D4342, clinical documentation shows pocket depths of 4mm or greater on at least 2 teeth per quadrant, bleeding on probing, and radiographic evidence of bone loss. These findings support medical necessity for SRP."
+    },
+    {
+      "id": "METLIFE-D2950-LACKDOC",
+      "payer": "MetLife",
+      "procedure_codes": ["D2950"],
+      "denial_codes": ["CO-16"],
+      "required_evidence_types": [
+        "CoronalStructureEstimate",
+        "DecayRemovalDocumentation",
+        "CrownPlanned"
+      ],
+      "narrative_template": "For D2950, the tooth has less than 50% remaining coronal structure after decay removal, and a crown is planned. The core buildup restores structural integrity and provides retention for the definitive crown."
+    }
+  ]
+}

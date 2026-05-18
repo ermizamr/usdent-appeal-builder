@@ -1,0 +1,17 @@
+Appeal Packet
+============
+
+Patient: John Smith
+Payer: Delta Dental PPO
+Provider: Dr. Sarah Johnson DDS
+Date of Service: 03/15/2025
+Claim ID: CLM-2025-0315-001
+Procedure Code: D4342
+Denial Code: CO-50
+Denial Reason: CO-50 - Not medically necessary
+Amount Billed: $280.00
+Amount Denied: $280.00
+
+Narrative
+---------
+For D4342, documentation shows: Pocket depths of 4mm or greater on at least 2 teeth per quadrant; Bleeding on probing documented; Radiographic evidence of bone loss. These findings support medical necessity for SRP under Delta Dental PPO.

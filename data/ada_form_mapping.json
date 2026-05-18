@@ -1,0 +1,41 @@
+{
+  "form_version": "ADA 2019",
+  "fields": [
+    {
+      "box": "1",
+      "label": "Type of Transaction",
+      "source": "type_of_transaction",
+      "pdf_field": "Box1"
+    },
+    {
+      "box": "2",
+      "label": "Predetermination/Preauthorization Number",
+      "source": "predetermination_number",
+      "pdf_field": "Box2"
+    },
+    {
+      "box": "11",
+      "label": "Billing Dentist Name",
+      "source": "billing_dentist_name",
+      "pdf_field": "Box11"
+    },
+    {
+      "box": "24",
+      "label": "Procedure Date",
+      "source": "procedure_date",
+      "pdf_field": "Box24"
+    },
+    {
+      "box": "26",
+      "label": "Procedure Code",
+      "source": "procedure_code",
+      "pdf_field": "Box26"
+    },
+    {
+      "box": "35",
+      "label": "Remarks",
+      "source": "remarks",
+      "pdf_field": "Box35"
+    }
+  ]
+}

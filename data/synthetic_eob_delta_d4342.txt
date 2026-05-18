@@ -1,0 +1,10 @@
+Delta Dental PPO EOB Summary
+Payer Name: Delta Dental PPO
+Patient Name: John Smith
+Billing Dentist Name: Dr. Sarah Johnson DDS
+Claim ID: CLM-2025-0315-001
+Date of Service: 03/15/2025
+Procedure Code: D4342 - Scaling and Root Planing, 1-3 teeth
+Amount Billed: $280.00
+Amount Denied: $280.00
+Denial Reason: CO-50 - Not medically necessary

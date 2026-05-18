@@ -1,0 +1,58 @@
+{
+  "delta_dental": {
+    "D4342": {
+      "required_clinical_criteria": [
+        "Pocket depths of 4mm or greater on at least 2 teeth per quadrant",
+        "Bleeding on probing documented",
+        "Radiographic evidence of bone loss"
+      ],
+      "narrative_template": "For {procedure_code}, documentation shows: {criteria}. These findings support medical necessity for SRP under {payer_name}.",
+      "required_attachments": [
+        "Perio chart",
+        "BOP charting",
+        "Radiographs"
+      ]
+    },
+    "D2950": {
+      "required_clinical_criteria": [
+        "Less than 50% remaining coronal tooth structure",
+        "Documentation of decay removal",
+        "Crown planned"
+      ],
+      "narrative_template": "For {procedure_code}, documentation shows: {criteria}. The core buildup restores structural integrity and supports the planned crown under {payer_name}.",
+      "required_attachments": [
+        "Clinical notes",
+        "Intraoral photos",
+        "Treatment plan"
+      ]
+    }
+  },
+  "metlife": {
+    "D4342": {
+      "required_clinical_criteria": [
+        "Pocket depths of 4mm or greater on at least 2 teeth per quadrant",
+        "Bleeding on probing documented",
+        "Radiographic evidence of bone loss"
+      ],
+      "narrative_template": "For {procedure_code}, documentation shows: {criteria}. These findings support medical necessity for SRP under {payer_name}.",
+      "required_attachments": [
+        "Perio chart",
+        "BOP charting",
+        "Radiographs"
+      ]
+    },
+    "D2950": {
+      "required_clinical_criteria": [
+        "Less than 50% remaining coronal tooth structure",
+        "Documentation of decay removal",
+        "Crown planned"
+      ],
+      "narrative_template": "For {procedure_code}, documentation shows: {criteria}. The core buildup restores structural integrity and supports the planned crown under {payer_name}.",
+      "required_attachments": [
+        "Clinical notes",
+        "Intraoral photos",
+        "Treatment plan"
+      ]
+    }
+  }
+}
