@@ -1,16 +1,13 @@
 services:
   - type: web
     name: usdent-api
-    env: python
+    env: docker
     plan: free
     region: oregon
-    buildCommand: |
-      apt-get update && apt-get install -y tesseract-ocr poppler-utils
-      pip install -r requirements.txt
-    startCommand: "PYTHONPATH=src USDENT_TESSERACT_CMD=/usr/bin/tesseract uvicorn usdent.api:app --host 0.0.0.0 --port $PORT"
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: USDENT_UI_ORIGINS
-        value: https://REPLACE_WITH_VERCEL_URL
+        value: https://usdent-appeal-builder-hm2w.vercel.app
       - key: USDENT_TESSERACT_CMD
         value: /usr/bin/tesseract
       - key: USDENT_PDF_OCR
