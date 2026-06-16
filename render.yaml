@@ -7,7 +7,7 @@ services:
     dockerfilePath: ./Dockerfile
     envVars:
       - key: USDENT_UI_ORIGINS
-      value: https://usdent-appeal-builder.vercel.app,http://localhost:3000,http://127.0.0.1:3000
+        value: https://usdent-appeal-builder.vercel.app,http://localhost:3000,http://127.0.0.1:3000
       - key: USDENT_TESSERACT_CMD
         value: /usr/bin/tesseract
       - key: USDENT_PDF_OCR
