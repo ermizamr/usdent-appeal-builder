@@ -4,3 +4,4 @@ __pycache__/
 .env
 web/node_modules/
 web/.next/
+web/tsconfig.tsbuildinfo

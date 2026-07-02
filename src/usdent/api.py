@@ -3,13 +3,19 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .automation import build_appeal_text, extract_eob_data, generate_narrative
+from .automation import (
+    ClinicProfile,
+    build_appeal_text,
+    extract_eob_data,
+    generate_narrative,
+)
 
 
 def _load_env_file() -> None:
@@ -50,10 +56,10 @@ def _resolve_template(template_id: str | None, clinic_id: str | None) -> tuple[P
         return None, None
 
     mapping_path = Path(template.get("mapping_path", "data/ada_form_mapping.json"))
-    template_path = template.get("template_path")
-    if not template_path:
-        env_var = template.get("template_env", "USDENT_ADA_TEMPLATE")
-        template_path = os.environ.get(env_var, "")
+    # An explicit env override wins (so deployments can swap in a licensed ADA
+    # form); otherwise fall back to the template bundled in the repo.
+    env_var = template.get("template_env", "USDENT_ADA_TEMPLATE")
+    template_path = os.environ.get(env_var, "") or template.get("template_path")
 
     template_file = Path(template_path) if template_path else None
     if template_file and not template_file.exists():
@@ -139,6 +145,13 @@ async def create_appeal_pdf(
     use_ai: bool = Form(False),
     clinic_id: str | None = Form(None),
     template_id: str | None = Form(None),
+    clinic_name: str = Form(""),
+    clinic_address: str = Form(""),
+    clinic_city_state_zip: str = Form(""),
+    clinic_phone: str = Form(""),
+    clinic_npi: str = Form(""),
+    clinic_license: str = Form(""),
+    treating_dentist: str = Form(""),
 ) -> Response:
     template_path, mapping_path = _resolve_template(template_id, clinic_id)
     if not template_path:
@@ -165,7 +178,24 @@ async def create_appeal_pdf(
         from .automation import fill_ada_form
 
         resolved_mapping = mapping_path or Path("data/ada_form_mapping.json")
-        fill_ada_form(eob_data, narrative, str(template_path), str(output_path), mapping_path=str(resolved_mapping))
+        clinic = ClinicProfile(
+            name=clinic_name,
+            address=clinic_address,
+            city_state_zip=clinic_city_state_zip,
+            phone=clinic_phone,
+            npi=clinic_npi,
+            license=clinic_license,
+            treating_dentist=treating_dentist,
+        )
+        fill_ada_form(
+            eob_data,
+            narrative,
+            str(template_path),
+            str(output_path),
+            mapping_path=str(resolved_mapping),
+            clinic=clinic,
+            stamp_date=date.today().strftime("%m/%d/%Y"),
+        )
         pdf_bytes = output_path.read_bytes()
     except Exception as exc:
         return JSONResponse(

@@ -41,7 +41,9 @@ Environment:
 - Copy `.env.example` to `.env` and fill values (AI key optional).
 
 ADA PDF output:
-- Set `USDENT_ADA_TEMPLATE` to the path of your ADA form PDF.
+- Works out of the box: a fillable ADA-style claim form is bundled at `data/ada_claim_template.pdf` and used by default, so the "Download ADA PDF" button is always enabled.
+- This bundled form is an ADA-style facsimile, not the copyrighted official ADA form. To use a licensed official form, set `USDENT_ADA_TEMPLATE` to its path (the env override takes priority over the bundled template).
+- Regenerate the bundled template with `python scripts/generate_ada_template.py` (requires `reportlab`).
 - Use `scripts/list_pdf_fields.py` to list form field names for mapping.
 - Configure multiple templates in `data/ada_templates.json`.
 - Optional: `USDENT_TEMPLATE_CONFIG` to point to a custom template config file.

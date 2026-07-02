@@ -3,6 +3,7 @@
   "templates": {
     "default": {
       "display_name": "ADA Default",
+      "template_path": "data/ada_claim_template.pdf",
       "template_env": "USDENT_ADA_TEMPLATE",
       "mapping_path": "data/ada_form_mapping.json"
     }

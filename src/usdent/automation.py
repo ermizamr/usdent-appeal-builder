@@ -21,6 +21,41 @@ class EobData:
     provider_name: str
 
 
+@dataclass
+class ClinicProfile:
+    """Front-desk clinic identity used to fill billing boxes and stamp the form.
+
+    Entered once in the UI (saved in the browser) and sent with each request, so
+    the front desk only has to upload an EOB to get a clean, stamped form back.
+    """
+
+    name: str = ""
+    address: str = ""
+    city_state_zip: str = ""
+    phone: str = ""
+    npi: str = ""
+    license: str = ""
+    treating_dentist: str = ""
+
+    def has_content(self) -> bool:
+        return any(
+            value.strip()
+            for value in (
+                self.name,
+                self.address,
+                self.city_state_zip,
+                self.phone,
+                self.npi,
+                self.license,
+                self.treating_dentist,
+            )
+        )
+
+    def name_address(self) -> str:
+        parts = [self.name, self.address, self.city_state_zip]
+        return "\n".join(part.strip() for part in parts if part.strip())
+
+
 _PATIENT_PATTERNS = [
     re.compile(r"patient\s*name\s*[:\-]?\s*(.+)", re.IGNORECASE),
     re.compile(r"member\s*name\s*[:\-]?\s*(.+)", re.IGNORECASE),
@@ -493,10 +528,14 @@ def fill_ada_form(
     template_path: str,
     output_path: str,
     mapping_path: str = "data/ada_form_mapping.json",
+    clinic: Optional[ClinicProfile] = None,
+    stamp_date: Optional[str] = None,
 ) -> None:
-    """Maps extracted data and narrative into ADA 2024 claim form fields.
+    """Maps extracted data and narrative into ADA claim form fields.
 
-    Requires pypdf. Uses environment variables for any sensitive settings.
+    When a clinic profile is supplied, its identity also fills the billing/treating
+    dentist boxes and is rendered as a visible identity stamp on the form. Requires
+    pypdf. Uses environment variables for any sensitive settings.
     """
     try:
         from pypdf import PdfReader, PdfWriter
@@ -507,14 +546,105 @@ def fill_ada_form(
     writer = PdfWriter()
     writer.append(reader)
 
-    fields = _build_ada_field_map(eob_data, narrative, mapping_path)
+    fields = _build_ada_field_map(eob_data, narrative, mapping_path, clinic)
 
     # No PHI logging; keep credentials in env vars only.
     _ = os.environ.get("USDENT_PHI_KEY", "")
 
     writer.update_page_form_field_values(writer.pages[0], fields)
+
+    if clinic and clinic.has_content():
+        _stamp_clinic_identity(writer, clinic, stamp_date)
+
     with open(output_path, "wb") as output_file:
         writer.write(output_file)
+
+
+def _stamp_clinic_identity(writer, clinic: ClinicProfile, stamp_date: Optional[str]) -> None:
+    """Overlay a rubber-stamp-style clinic identity block onto the first page."""
+    overlay = _build_stamp_overlay(clinic, stamp_date)
+    if overlay is None:
+        return
+    try:
+        from pypdf import PdfReader
+    except ImportError:  # pragma: no cover - guarded by caller import
+        return
+    stamp_page = PdfReader(overlay).pages[0]
+    writer.pages[0].merge_page(stamp_page)
+
+
+def _build_stamp_overlay(clinic: ClinicProfile, stamp_date: Optional[str]):
+    """Render the clinic identity stamp to an in-memory PDF; None if unavailable."""
+    try:
+        from io import BytesIO
+
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.units import inch
+        from reportlab.pdfgen import canvas
+    except ImportError:
+        # reportlab is optional at runtime; skip the visual stamp if missing.
+        return None
+
+    page_width, page_height = letter
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+
+    # Position the stamp in the top-right header area, slightly rotated for a
+    # hand-stamped look.
+    box_w = 2.5 * inch
+    box_h = 1.0 * inch
+    x = page_width - box_w - 0.5 * inch
+    y = page_height - box_h - 0.35 * inch
+
+    pdf.saveState()
+    pdf.translate(x + box_w / 2, y + box_h / 2)
+    pdf.rotate(4)
+    pdf.translate(-(box_w / 2), -(box_h / 2))
+
+    stamp_rgb = (0.13, 0.27, 0.55)
+    pdf.setStrokeColorRGB(*stamp_rgb)
+    pdf.setFillColorRGB(*stamp_rgb)
+    pdf.setLineWidth(1.6)
+    pdf.roundRect(0, 0, box_w, box_h, 6, stroke=1, fill=0)
+    pdf.setLineWidth(0.6)
+    pdf.roundRect(3, 3, box_w - 6, box_h - 6, 5, stroke=1, fill=0)
+
+    cx = box_w / 2
+    text_y = box_h - 16
+    pdf.setFont("Helvetica-Bold", 9.5)
+    pdf.drawCentredString(cx, text_y, (clinic.name or "DENTAL CLINIC").upper()[:34])
+    text_y -= 12
+
+    pdf.setFont("Helvetica", 6.5)
+    detail_lines = []
+    npi_lic = " | ".join(
+        part for part in (
+            f"NPI {clinic.npi}" if clinic.npi.strip() else "",
+            f"Lic {clinic.license}" if clinic.license.strip() else "",
+        ) if part
+    )
+    if npi_lic:
+        detail_lines.append(npi_lic)
+    addr = ", ".join(
+        part.strip() for part in (clinic.address, clinic.city_state_zip) if part.strip()
+    )
+    if addr:
+        detail_lines.append(addr[:48])
+    if clinic.phone.strip():
+        detail_lines.append(f"Tel {clinic.phone.strip()}")
+    for line in detail_lines[:3]:
+        pdf.drawCentredString(cx, text_y, line)
+        text_y -= 9
+
+    if stamp_date:
+        pdf.setFont("Helvetica-Bold", 7)
+        pdf.drawCentredString(cx, 7, f"RECEIVED {stamp_date}")
+
+    pdf.restoreState()
+    pdf.showPage()
+    pdf.save()
+    buffer.seek(0)
+    return buffer
 
 
 def build_appeal_text(eob_data: EobData, narrative: str) -> str:
@@ -600,18 +730,36 @@ def _generate_narrative_ai(
     return data["choices"][0]["message"]["content"].strip()
 
 
-def _build_ada_field_map(eob_data: EobData, narrative: str, mapping_path: str) -> Dict[str, str]:
+def _build_ada_field_map(
+    eob_data: EobData,
+    narrative: str,
+    mapping_path: str,
+    clinic: Optional[ClinicProfile] = None,
+) -> Dict[str, str]:
     raw = Path(mapping_path).read_text(encoding="utf-8")
     mapping = _safe_json_loads(raw)
     fields: Dict[str, str] = {}
 
+    clinic = clinic or ClinicProfile()
+    # Prefer the clinic profile for the treating dentist; fall back to whatever
+    # the OCR scraped off the EOB.
+    treating = clinic.treating_dentist.strip() or eob_data.provider_name
+
     value_map = {
-        "type_of_transaction": "",
-        "predetermination_number": "",
-        "billing_dentist_name": eob_data.provider_name,
+        "type_of_transaction": "Request for Reconsideration",
+        "patient_name": eob_data.patient_name,
+        "claim_id": eob_data.claim_id,
+        "payer_name": eob_data.payer_name,
+        "billing_dentist_name": clinic.name or eob_data.provider_name,
         "procedure_date": eob_data.date_of_service,
         "procedure_code": eob_data.procedure_code,
+        "amount_billed": eob_data.amount_billed,
         "remarks": narrative,
+        "clinic_name_address": clinic.name_address(),
+        "clinic_npi": clinic.npi,
+        "clinic_license": clinic.license,
+        "clinic_phone": clinic.phone,
+        "treating_dentist": treating,
     }
 
     for field in mapping.get("fields", []):

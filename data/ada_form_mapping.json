@@ -1,5 +1,5 @@
 {
-  "form_version": "ADA 2019",
+  "form_version": "ADA 2024 (facsimile)",
   "fields": [
     {
       "box": "1",
@@ -9,15 +9,21 @@
     },
     {
       "box": "2",
-      "label": "Predetermination/Preauthorization Number",
-      "source": "predetermination_number",
+      "label": "Predetermination/Original Claim Number",
+      "source": "claim_id",
       "pdf_field": "Box2"
     },
     {
-      "box": "11",
-      "label": "Billing Dentist Name",
-      "source": "billing_dentist_name",
-      "pdf_field": "Box11"
+      "box": "3",
+      "label": "Company / Plan Name (Insurance)",
+      "source": "payer_name",
+      "pdf_field": "Box3"
+    },
+    {
+      "box": "20",
+      "label": "Patient Name",
+      "source": "patient_name",
+      "pdf_field": "Box20"
     },
     {
       "box": "24",
@@ -26,16 +32,58 @@
       "pdf_field": "Box24"
     },
     {
-      "box": "26",
+      "box": "29",
       "label": "Procedure Code",
       "source": "procedure_code",
-      "pdf_field": "Box26"
+      "pdf_field": "Box29"
+    },
+    {
+      "box": "31",
+      "label": "Fee",
+      "source": "amount_billed",
+      "pdf_field": "Box31"
     },
     {
       "box": "35",
-      "label": "Remarks",
+      "label": "Remarks (Appeal Narrative)",
       "source": "remarks",
       "pdf_field": "Box35"
+    },
+    {
+      "box": "48",
+      "label": "Billing Dentist or Dental Entity Name and Address",
+      "source": "clinic_name_address",
+      "pdf_field": "Box48"
+    },
+    {
+      "box": "49",
+      "label": "Billing NPI",
+      "source": "clinic_npi",
+      "pdf_field": "Box49"
+    },
+    {
+      "box": "50",
+      "label": "License Number",
+      "source": "clinic_license",
+      "pdf_field": "Box50"
+    },
+    {
+      "box": "52",
+      "label": "Phone Number",
+      "source": "clinic_phone",
+      "pdf_field": "Box52"
+    },
+    {
+      "box": "53",
+      "label": "Treating Dentist",
+      "source": "treating_dentist",
+      "pdf_field": "Box53"
+    },
+    {
+      "box": "54",
+      "label": "Treating NPI",
+      "source": "clinic_npi",
+      "pdf_field": "Box54"
     }
   ]
 }

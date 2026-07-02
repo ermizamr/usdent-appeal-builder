@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Extracted = {
   patient_name: string;
@@ -35,6 +35,41 @@ const EMPTY_EXTRACTED: Extracted = {
   amount_denied: "",
 };
 
+// Front-desk clinic identity. Entered once, saved in the browser (never sent to
+// any account/server to store), and attached to each ADA form request so the
+// clinic name, IDs, and a "received" stamp land on the finished form.
+type ClinicProfile = {
+  clinic_name: string;
+  treating_dentist: string;
+  clinic_address: string;
+  clinic_city_state_zip: string;
+  clinic_phone: string;
+  clinic_npi: string;
+  clinic_license: string;
+};
+
+const EMPTY_CLINIC: ClinicProfile = {
+  clinic_name: "",
+  treating_dentist: "",
+  clinic_address: "",
+  clinic_city_state_zip: "",
+  clinic_phone: "",
+  clinic_npi: "",
+  clinic_license: "",
+};
+
+const CLINIC_STORAGE_KEY = "usdent_clinic_profile";
+
+const CLINIC_FIELDS: { key: keyof ClinicProfile; label: string; placeholder: string }[] = [
+  { key: "clinic_name", label: "Practice name", placeholder: "Bright Smile Dental" },
+  { key: "treating_dentist", label: "Treating dentist", placeholder: "Dr. Jane Roe, DDS" },
+  { key: "clinic_address", label: "Street address", placeholder: "123 Main St" },
+  { key: "clinic_city_state_zip", label: "City, State ZIP", placeholder: "Austin, TX 78701" },
+  { key: "clinic_phone", label: "Phone", placeholder: "512-555-0100" },
+  { key: "clinic_npi", label: "NPI", placeholder: "1234567890" },
+  { key: "clinic_license", label: "License #", placeholder: "TX-45678" },
+];
+
 export default function HomePage() {
   const [file, setFile] = useState<File | null>(null);
   const [useAi, setUseAi] = useState(false);
@@ -44,10 +79,42 @@ export default function HomePage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [pdfAvailable, setPdfAvailable] = useState(false);
   const [clinicId, setClinicId] = useState("");
+  const [clinic, setClinic] = useState<ClinicProfile>(EMPTY_CLINIC);
+  const [showClinicForm, setShowClinicForm] = useState(false);
 
   const apiBase = useMemo(() => {
     return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
   }, []);
+
+  // Load the saved clinic profile once, after mount (avoids SSR/localStorage
+  // hydration mismatch). Open the form automatically if nothing is saved yet.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(CLINIC_STORAGE_KEY);
+      if (raw) {
+        setClinic({ ...EMPTY_CLINIC, ...(JSON.parse(raw) as Partial<ClinicProfile>) });
+      } else {
+        setShowClinicForm(true);
+      }
+    } catch {
+      setShowClinicForm(true);
+    }
+  }, []);
+
+  const updateClinic = (key: keyof ClinicProfile, value: string) => {
+    setClinic((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        window.localStorage.setItem(CLINIC_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage failures (e.g. private mode); the value still applies
+        // for this session.
+      }
+      return next;
+    });
+  };
+
+  const clinicConfigured = Object.values(clinic).some((value) => value.trim() !== "");
 
   const canSubmit = file && !loading;
 
@@ -109,6 +176,11 @@ export default function HomePage() {
     if (clinicId.trim()) {
       form.append("clinic_id", clinicId.trim());
     }
+    // Attach the saved clinic identity so the ADA form is filled and stamped.
+    (Object.keys(clinic) as (keyof ClinicProfile)[]).forEach((key) => {
+      const value = clinic[key].trim();
+      if (value) form.append(key, value);
+    });
 
     try {
       const response = await fetch(`${apiBase}/api/appeals/pdf`, {
@@ -144,33 +216,104 @@ export default function HomePage() {
       <div className="pointer-events-none absolute right-10 top-32 h-64 w-64 rounded-full bg-ocean/20 blur-3xl" />
 
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-line bg-parchment px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-haze">
-          Active payer
+        <div className="inline-flex items-center gap-2 rounded-full border border-copper/40 bg-copper/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-copper">
           <span className="h-1.5 w-1.5 rounded-full bg-copper" />
-          Delta Dental PPO
+          100% Free · No sign-up
         </div>
         <h1 className="text-balance font-serif text-4xl sm:text-5xl lg:text-6xl">
-          USDENT Appeal Builder
+          Free Dental Claim Appeal Builder
         </h1>
         <p className="max-w-2xl text-balance text-base text-haze sm:text-lg">
-          Upload an EOB, confirm extracted data, and deliver a ready-to-send appeal packet in minutes.
+          Upload an EOB and instantly get a ready-to-send appeal packet plus a filled
+          ADA-style claim form — free, with no account or credit card required.
+        </p>
+        <p className="max-w-2xl text-balance text-sm text-haze/80">
+          Built to help dental teams fight denials without paying for expensive billing software.
+          Nothing to install, no per-claim fees.
         </p>
       </section>
 
-      <section className="mx-auto mt-12 w-full max-w-5xl rounded-3xl border border-line bg-parchment p-6 shadow-card sm:p-10">
+      <section className="mx-auto mt-10 w-full max-w-5xl rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-xl">
+              Your Clinic
+              <span className="ml-2 align-middle text-xs font-medium uppercase tracking-[0.2em] text-copper">
+                One-time setup
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-haze">
+              Saved on this device only — filled into the billing boxes and stamped on every form.{" "}
+              {clinicConfigured ? (
+                <span className="font-medium text-green-700">
+                  ✓ {clinic.clinic_name.trim() || "Clinic details saved"}
+                </span>
+              ) : (
+                <span className="font-medium text-copper">Not set up yet.</span>
+              )}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowClinicForm((prev) => !prev)}
+            className="rounded-full border border-line bg-parchment px-5 py-2 text-sm font-semibold text-ink transition hover:-translate-y-0.5"
+          >
+            {showClinicForm ? "Done" : clinicConfigured ? "Edit clinic" : "Set up clinic"}
+          </button>
+        </div>
+
+        {showClinicForm ? (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {CLINIC_FIELDS.map((field) => (
+              <label key={field.key} className="flex flex-col gap-1 text-xs uppercase tracking-[0.15em] text-haze">
+                {field.label}
+                <input
+                  type="text"
+                  value={clinic[field.key]}
+                  onChange={(event) => updateClinic(field.key, event.target.value)}
+                  placeholder={field.placeholder}
+                  className="rounded-xl border border-line bg-white px-4 py-2 text-sm normal-case tracking-normal text-ink"
+                />
+              </label>
+            ))}
+            <p className="sm:col-span-2 text-xs text-haze">
+              Changes save automatically. The stamp shows your practice name, IDs, and today&apos;s
+              date on the finished ADA form.
+            </p>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="mx-auto mt-8 w-full max-w-5xl rounded-3xl border border-line bg-parchment p-6 shadow-card sm:p-10">
         <div className="grid gap-6">
-          <label className="flex flex-col gap-4 rounded-2xl border border-dashed border-copper/70 bg-white/90 p-6 text-sm text-haze">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-copper">EOB Upload</span>
-            <span className="text-lg font-medium text-ink">
-              Drag a file here or browse to select.
-            </span>
-            <span className="text-xs">PDF, JPG, PNG, or TXT accepted.</span>
+          <label className="flex flex-col gap-4 rounded-2xl border-2 border-dashed border-copper/50 bg-white/90 p-8 text-sm text-haze transition hover:border-copper/70 hover:bg-white cursor-pointer">
+            <div className="flex items-center gap-3">
+              <svg className="h-10 w-10 text-copper" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <div>
+                <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-copper">
+                  Step 1: Upload Your Messy EOB
+                </span>
+                <span className="mt-1 block text-lg font-medium text-ink">
+                  Drop your paper EOB scan here or click to browse
+                </span>
+                <span className="mt-1 block text-xs text-haze">
+                  Accepts scanned PDFs, photos (JPG/PNG), or text files
+                </span>
+              </div>
+            </div>
             <input
               type="file"
               accept=".pdf,.png,.jpg,.jpeg,.txt"
-              className="text-sm"
+              className="hidden"
               onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             />
+            {file && (
+              <div className="rounded-lg bg-copper/10 px-4 py-2 text-sm text-ink border border-copper/20">
+                ✓ Selected: <span className="font-semibold">{file.name}</span>
+              </div>
+            )}
           </label>
 
           <div className="flex flex-wrap items-center gap-4">
@@ -196,9 +339,9 @@ export default function HomePage() {
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="rounded-full bg-copper px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-copper/20 transition hover:-translate-y-0.5 disabled:opacity-60"
+              className="rounded-full bg-copper px-8 py-3 text-base font-semibold text-white shadow-lg shadow-copper/20 transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? "Processing..." : "Generate Appeal"}
+              {loading ? "⏳ Processing..." : "✨ Generate Clean Appeal Form"}
             </button>
             <button
               className="rounded-full border border-ocean px-6 py-3 text-sm font-semibold text-ocean transition hover:-translate-y-0.5 disabled:opacity-60"
@@ -208,17 +351,23 @@ export default function HomePage() {
               Download Appeal
             </button>
             <button
-              className="rounded-full border border-line bg-white px-6 py-3 text-sm font-semibold text-ink transition hover:-translate-y-0.5 disabled:opacity-60"
+              className="rounded-full bg-ocean px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-ocean/20 transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={downloadPdf}
               disabled={!file || !pdfAvailable || downloadingPdf}
             >
-              {downloadingPdf ? "Preparing PDF..." : "Download ADA PDF"}
+              {downloadingPdf ? "📄 Preparing..." : "📄 Download Clean ADA Form"}
             </button>
           </div>
 
           {!pdfAvailable && data ? (
-            <div className="text-xs text-haze">
-              ADA template not configured. Set USDENT_ADA_TEMPLATE to enable PDF output.
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+              ⚠️ PDF form temporarily unavailable. You can still download the appeal text above.
+            </div>
+          ) : null}
+
+          {pdfAvailable && data ? (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-900">
+              ✅ Your clean, filled ADA form is ready! Click "Download Clean ADA Form" above.
             </div>
           ) : null}
 
@@ -271,7 +420,8 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto mt-12 max-w-5xl text-center text-xs text-haze">
-        Prototype UI for internal MVP testing. PHI should not be stored outside approved systems.
+        Free to use — no account, no per-claim fees. Files are processed to generate your appeal and
+        are not stored. Avoid uploading PHI you are not authorized to share.
       </div>
     </main>
   );
