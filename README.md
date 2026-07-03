@@ -63,7 +63,9 @@ PDF OCR (optional):
 ## UI (Next.js)
 - Install: `cd web; npm install`
 - Run: `cd web; npm run dev`
-- Configure API base URL: `NEXT_PUBLIC_API_BASE_URL` (defaults to `http://localhost:8000`)
+- Configure API base URL with `NEXT_PUBLIC_API_BASE_URL`.
+- For local development, point it at `http://localhost:8000`.
+- For deployment, point it at your Hugging Face Space URL.
 
 ## Hosting demo (no credit card)
 Recommended: Hugging Face Spaces (API, Docker) + Vercel (UI).
