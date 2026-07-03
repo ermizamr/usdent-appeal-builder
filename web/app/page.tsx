@@ -366,10 +366,10 @@ export default function HomePage() {
           ) : null}
 
           {pdfAvailable && data ? (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-900">
-              ✅ Your clean, filled ADA form is ready! Click "Download Clean ADA Form" above.
-            </div>
-          ) : null}
+  <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-900">
+    ✅ Your clean, filled ADA form is ready! Click &quot;Download Clean ADA Form&quot; above.
+  </div>
+) : null}
 
           {error ? <div className="text-sm text-red-600">Error: {error}</div> : null}
           {loading ? (
